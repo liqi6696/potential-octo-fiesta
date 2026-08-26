@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e3a2f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="哀悼空间">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='10' y='60' font-size='80'>🪦</text></svg>">
+<title>哀悼空间</title>
+<style>
+  :root{
+    --sky1:#e2ebe3;
+    --sky2:#a8c9a5;
+    --sky3:#5f8f5a;
+    --sky4:#3e6b38;
+    --stone:#d8d2c2;
+    --stone-dark:#b8a990;
+    --moss:#7a9a6a;
+    --moss-dark:#5f7a52;
+    --leaf:#c9a66b;
+    --leaf-dark:#a88550;
+    --shadow:rgba(20,40,30,.35);
+    --line:rgba(255,255,255,.25);
+    --cream:#f4efe4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:"Songti SC","Noto Serif SC",serif,system-ui,sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.8) 0%, transparent 28%),
+      radial-gradient(circle at 80% 18%, rgba(255,255,255,.65) 0%, transparent 32%),
+      linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 28%, var(--sky3) 66%, var(--sky4) 100%);
+    color:var(--cream);
+    min-height:100dvh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    padding:calc(24px + env(safe-area-inset-top)) 22px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .scene{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+  }
+  .trees{
+    position:absolute;
+    left:0;
+    right:0;
+    top:0;
+    height:55%;
+    background:
+      radial-gradient(circle at 10% 30%, rgba(60,90,50,.45) 0%, transparent 16%),
+      radial-gradient(circle at 25% 24%, rgba(80,120,70,.35) 0%, transparent 18%),
+      radial-gradient(circle at 75% 28%, rgba(70,110,60,.4) 0%, transparent 20%),
+      radial-gradient(circle at 90% 32%, rgba(50,80,45,.5) 0%, transparent 16%);
+  }
+  .ground{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:48%;
+    background:
+      radial-gradient(circle at 50% 100%, rgba(180,160,130,.18) 0%, transparent 28%),
+      linear-gradient(180deg, rgba(95,143,90,0) 0%, rgba(60,90,55,.22) 100%);
+  }
+  .fog{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:12%;
+    height:18%;
+    background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.18) 100%);
+    filter:blur(12px);
+  }
+
+  .falling-leaf{
+    position:absolute;top:-20px;font-size:16px;color:var(--leaf);
+    animation: leafFall linear infinite;opacity:0.75;
+  }
+  @keyframes leafFall{
+    0%{transform:translateY(0) rotate(0deg);opacity:0.8;}
+    100%{transform:translateY(100vh) rotate(380deg);opacity:0;}
+  }
+  .falling-moss{
+    position:absolute;top:-20px;font-size:14px;color:var(--moss);
+    animation: mossFall linear infinite;opacity:0.65;
+  }
+  @keyframes mossFall{
+    0%{transform:translateY(0) rotate(0deg);opacity:0.7;}
+    100%{transform:translateY(100vh) rotate(-320deg);opacity:0;}
+  }
+
+  .stage{
+    position:relative;
+    z-index:1;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap:22px;
+  }
+  .screen{
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:20px;
+    width:100%;
+    animation:rise .8s ease both;
+  }
+  .screen.show{
+    display:flex;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(12px)}
+    to{opacity:1;transform:none}
+  }
+
+  h1{
+    font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:25px;
+    font-weight:600;
+    line-height:1.6;
+    letter-spacing:1px;
+    color:#f7f3ea;
+    text-shadow:0 1px 12px rgba(30,60,45,.45);
+  }
+  .lead{
+    font-size:15.5px;
+    line-height:1.9;
+    color:#f7f3ea;
+    opacity:.92;
+    max-width:19em;
+  }
+  .soft{
+    font-size:13.5px;
+    line-height:1.8;
+    color:#e8e4d6;
+    opacity:.8;
+    max-width:20em;
+  }
+  .hint{
+    font-size:12.5px;
+    color:#e8e4d6;
+    opacity:.7;
+    line-height:1.7;
+    text-align:left;
+    width:100%;
+    max-width:20em;
+  }
+
+  textarea,input{
+    width:100%;
+    background:rgba(255,255,255,.14);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px;
+    color:#fff;
+    font-size:16px;
+    font-family:inherit;
+    outline:none;
+    backdrop-filter:blur(4px);
+  }
+  textarea::placeholder,input::placeholder{
+    color:rgba(255,255,255,.6);
+  }
+  textarea{
+    resize:none;
+    min-height:76px;
+    line-height:1.6;
+  }
+
+  .btns{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-top:4px;
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    font-size:16px;
+    border-radius:100px;
+    transition:.2s;
+    width:100%;
+  }
+  .primary{
+    background:linear-gradient(180deg,#a8c9a5,#5f8f5a);
+    color:#1e3a2f;
+    font-weight:600;
+    padding:16px;
+    box-shadow:0 8px 24px -8px rgba(40,80,60,.5);
+  }
+  .primary:active{
+    transform:scale(.98);
+  }
+  .ghost{
+    background:transparent;
+    color:#f7f3ea;
+    border:1px solid var(--line);
+    padding:15px;
+    font-weight:400;
+  }
+
+  .grave-wrap{
+    position:relative;
+    width:230px;
+    height:260px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    margin-top:8px;
+  }
+
+  .tombstone{
+    position:relative;
+    width:150px;
+    height:210px;
+    background:
+      linear-gradient(135deg, #dfd6c8 0%, #c8b99f 48%, #b8a990 100%);
+    border-radius:18px 18px 4px 4px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.8),
+      inset 0 -1px 0 rgba(0,0,0,.08),
+      0 12px 30px rgba(20,40,30,.45);
+  }
+  .tombstone::before{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border:1px solid rgba(160,140,110,.25);
+    border-radius:12px 12px 2px 2px;
+  }
+  .tombstone::after{
+    content:"R · I · P";
+    position:absolute;
+    top:18px;
+    left:50%;
+    transform:translateX(-50%);
+    font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:13px;
+    letter-spacing:5px;
+    color:#8b7355;
+    opacity:.8;
+  }
+
+  .inscription{
+    position:absolute;
+    top:42px;
+    left:50%;
+    transform:translateX(-50%);
+    width:126px;
+    text-align:center;
+    line-height:1.5;
+  }
+  .g-name{
+    font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:18px;
+    font-weight:600;
+    color:#5a3e2b;
+    word-break:break-word;
+  }
+  .g-epitaph{
+    font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:13px;
+    color:#6b4f3a;
+    line-height:1.7;
+    margin-top:8px;
+    word-break:break-word;
+  }
+
+  .tomb-base{
+    position:absolute;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:180px;
+    height:34px;
+    background:
+      linear-gradient(180deg, #b8a990 0%, #9e8f76 100%);
+    border-radius:4px;
+    box-shadow:0 8px 18px rgba(20,40,30,.35);
+  }
+
+  .moss-bed{
+    position:absolute;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    width:165px;
+    height:14px;
+    background:
+      radial-gradient(circle at 20% 50%, rgba(122,154,106,.65) 0%, transparent 45%),
+      radial-gradient(circle at 50% 60%, rgba(95,122,82,.55) 0%, transparent 50%),
+      radial-gradient(circle at 80% 50%, rgba(122,154,106,.65) 0%, transparent 45%);
+    filter:blur(5px);
+    opacity:0;
+    transition:.6s ease;
+  }
+  .moss-bed.on{
+    opacity:1;
+  }
+
+  .leaf-layer{
+    position:absolute;
+    bottom:32px;
+    left:50%;
+    transform:translateX(-50%);
+    width:210px;
+    height:42px;
+    pointer-events:none;
+    z-index:2;
+  }
+  .leaf{
+    position:absolute;
+    top:-10px;
+    font-size:20px;
+    color:var(--leaf);
+    opacity:0;
+    transform:translateY(0) rotate(0deg);
+    transition:.8s cubic-bezier(.34,1.56,.64,1);
+  }
+  .leaf.fallen{
+    opacity:1;
+    top:auto;
+    bottom:8px;
+    transform:translateY(0) rotate(12deg);
+  }
+
+  .quote-block{
+    background:rgba(255,255,255,.15);
+    border-radius:16px;
+    padding:20px;
+    margin:10px 0;
+    backdrop-filter:blur(4px);
+    border:1px solid var(--line);
+  }
+  .quote-text{
+    font-family:"Songti SC","Noto Serif SC",serif;
+    font-size:15px;
+    line-height:1.8;
+    color:#fff;
+    text-shadow:0 1px 6px rgba(30,60,45,.3);
+  }
+  .quote-author{
+    font-size:12px;
+    color:#d4e2d8;
+    margin-top:10px;
+    text-align:right;
+    opacity:.9;
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="trees"></div>
+  <div class="ground"></div>
+  <div class="fog"></div>
+  <div id="fallContainer"></div>
+</div>
+
+<div class="app">
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+let state = 'entry';
+let obj = '';
+let epitaph = '';
+let leafCount = 0;
+const stage = document.getElementById('stage');
+const fallContainer = document.getElementById('fallContainer');
+
+const quotes = [
+  {text:"终于和I聚。两个人都身心安然，可以好好走路、谈话，实在奢侈。",author:"林奕含",book:"《隐于市之四十一：开学》"},
+  {text:"每个人走路都急得像赶一场亲人的喜事，或是丧事。一个九十秒的路灯日本人只要十秒就可以走完，伊纹可以慢慢地走，走整整九十秒，想到自己的心事被投进人潮之中变得稀薄，可是她想到的事实在太庞大了，庞大的心事稀释在人群里，人群也承载不起。",author:"林奕含",book:"《房思琪的初恋乐园》"},
+  {text:"她还过着一个要被磨石子路绊倒、泥灰墙蹭破皮才知觉到自己在行走着的日子。很用力一步一步要走直不要放任自己跌进车头灯里。",author:"林奕含",book:"《告白，之三》"},
+  {text:"有时候，他能听到的只有裤腿互相擦碰的声响。从日出的地平线到日落的地平线之间，都是空旷地带。他爬上一座山，仰面躺着凝神细听，万籁俱寂，阳光的暖意浸透到骨头里。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"我可以在这里一直活下去，他想，也许直到死去。什么事都不会发生，每天都跟前一天一模一样，没什么可说的。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"那种走在路上会产生的焦虑，已经开始离他而去。有时候，他走在路上，都不知道自己是醒着还是睡着。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"他能够理解人们为什么会退隐到这里，把自己隔绝在连绵几英里的静默中；他能够理解他们为什么想把如此静默的特权代代相传。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"他不知道，在栅栏与栅栏之间，有没有被遗忘的角落、角度和走廊，有没有迄今尚且不属于任何人的土地。也许，假若有人能飞得足够高，他想，那就能看得见了。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"他很大程度上已经变成了一个习惯于在晨昏暗影和黑夜中活动的动物，白日的光明每每刺痛他的眼睛。在水坝周围活动的时候，他不再需要沿着小径行走。主要是靠一种触觉而不是视觉。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"整个世界肯定只有我才知道我在那里，我可以认定我已经失踪了。",author:"J.M.库切",book:"《迈克尔·K的生活与时代》"},
+  {text:"在开普敦的冬天，一连几个星期下雨。在雨中沿着主街行走，有时候他不得不停下来去拾回滑掉的一只凉鞋。",author:"J.M.库切",book:"《青春》"},
+  {text:"星期日他在房间里看《观察家报》，然后出去看个电影，或到荒野去散步。星期六和星期天的晚上是最难熬的。",author:"J.M.库切",book:"《青春》"},
+  {text:"身体左摇右晃，从一个地方到另一个地方。",author:"J.M.库切",book:"《慢人》"},
+  {text:"他责备自己说，这就是走路分神的后果！都怪我，非要走玛吉尔路！",author:"J.M.库切",book:"《慢人》"},
+  {text:"西蒙带着大卫散步，寻找一片湖，却被一堵地图上没有标注的墙挡住路。他们沿着墙走，然后看见了伊内斯。",author:"J.M.库切",book:"《耶稣的童年》"},
+  {text:"希望一人独处的念头始终不变地存于心中，所以一天跑一个小时，来确保只属于自己的沉默的时间……至少在跑步时不需要和任何人交谈，不必听任何人说话，只要眺望周围的风光、凝视自己就行。",author:"村上春树",book:"《当我谈跑步时，我谈些什么》"},
+  {text:"我跑步，只是跑着。原则上是在空白中跑步。也许是为了获得空白而跑步。",author:"村上春树",book:"《当我谈跑步时，我谈些什么》"},
+  {text:"将意识集中于迈出去的每一步，同时，还要以尽可能长的眼光去看待问题，尽可能远地去眺望风景。",author:"村上春树",book:"《当我谈跑步时，我谈些什么》"},
+  {text:"运动是灵魂的良药；你不需要目的地，只需要愿意继续前进的意愿。",author:"村上春树"},
+  {text:"慢慢走路，多多喝水。",author:"村上春树"},
+  {text:"不管奔跑速度降低了多少，我都不能走。这是原则。",author:"村上春树"}
+];
+
+const keywords = ["放下","遗憾","孤独","释怀","告别","森林","散步","执念","难过","悲伤","叶子","落叶","苔藓","风","沉默","走路","行走","心事","独处","空白","前行","放逐","静默"];
+const leafEmojis = ["🍂","🍁","🍃"];
+const mossEmojis = ["🌿","🍀"];
+
+function createFallingLeaf(){
+  const el = document.createElement('span');
+  el.className = 'falling-leaf';
+  el.textContent = leafEmojis[Math.floor(Math.random()*leafEmojis.length)];
+  const left = Math.random()*100;
+  const dur = 14 + Math.random()*9;
+  el.style.left = left + '%';
+  el.style.animationDuration = dur + 's';
+  fallContainer.appendChild(el);
+  setTimeout(()=>el.remove(), dur*1000);
+}
+function createFallingMoss(){
+  const el = document.createElement('span');
+  el.className = 'falling-moss';
+  el.textContent = mossEmojis[Math.floor(Math.random()*mossEmojis.length)];
+  const left = Math.random()*100;
+  const dur = 16 + Math.random()*10;
+  el.style.left = left + '%';
+  el.style.animationDuration = dur + 's';
+  fallContainer.appendChild(el);
+  setTimeout(()=>el.remove(), dur*1000);
+}
+setInterval(createFallingLeaf, 1100);
+setInterval(createFallingMoss, 2200);
+
+function getRandomQuote(){
+  return quotes[Math.floor(Math.random()*quotes.length)];
+}
+function matchKeyword(){
+  const lowerEp = epitaph.toLowerCase();
+  return keywords.some(k=>lowerEp.includes(k));
+}
+function escapeHtml(s) {
+  return (s || '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;','<': '&lt;','>': '&gt;','"': '&quot;',"'": '&#39;'
+  }[m]));
+}
+
+function render() {
+  if (state === 'entry') {
+    stage.innerHTML = `<div class="screen show">
+      <h1>哀悼空间</h1>
+      <p class="lead">
+      人生本是一场漫长独行。<br>
+      我们在行走中放逐心事，在静默里接纳失去。<br>
+      允许自己停留、回望、哀悼，<br>
+      再与过往温柔道别，缓缓前行。
+      </p>
+      <p class="soft" style="margin-top:4px">
+      落叶为证，苔藓为壤，<br>
+      把遗憾葬于林间，轻装奔赴前路。
+      </p>
+      <div class="btns"><button class="primary" onclick="go('name')">开始</button></div>
+    </div>`;
+    return;
+  }
+
+  if (state === 'name') {
+    stage.innerHTML = `<div class="screen show">
+      <h1 style="font-size:22px">安放一段心事</h1>
+      <p class="soft">写下你想要释怀的过往，不必强求释怀，只需坦诚安放。</p>
+      <input id="objIn" maxlength="40" placeholder="写下它的名字" value="${escapeHtml(obj)}">
+      <div class="btns"><button class="primary" onclick="saveName()">立碑封存</button></div>
+    </div>`;
+    setTimeout(() => document.getElementById('objIn').focus(), 300);
+    return;
+  }
+
+  if (state === 'epitaph') {
+    stage.innerHTML = `<div class="screen show">
+      <h1 style="font-size:22px">刻下一句自语</h1>
+      <p class="hint">与过往和解，承认它曾来过，也允许它就此落幕。<br>不必字字尖锐，只需遵从本心。</p>
+      <textarea id="epIn" maxlength="80" placeholder="写下你最后的心里话">${escapeHtml(epitaph)}</textarea>
+      <div class="btns"><button class="primary" onclick="saveEpitaph()">镌刻留存</button></div>
+    </div>`;
+    setTimeout(() => document.getElementById('epIn').focus(), 300);
+    return;
+  }
+
+  if (state === 'grave') {
+    const leaves = ['🍂','🍁','🍂','🌿','🍂'];
+    stage.innerHTML = `<div class="screen show">
+      <div class="grave-wrap">
+        <div class="tombstone">
+          <div class="inscription">
+            <div class="g-name">${escapeHtml(obj || '——')}</div>
+            <div class="g-epitaph">${escapeHtml(epitaph || '')}</div>
+          </div>
+        </div>
+        <div class="tomb-base"></div>
+        <div class="moss-bed" id="mossBed"></div>
+        <div class="leaf-layer" id="leafLayer">
+          ${leaves.map((l,i)=>`<span class="leaf" data-l="${l}" style="left:${10 + i * 38}%">${l}</span>`).join('')}
+        </div>
+      </div>
+      <p class="soft" id="graveHint">拾一片落叶，安放一份心绪。</p>
+      <div class="btns">
+        <button class="ghost" onclick="dropLeaf()">🍂 落下一片落叶</button>
+        <button class="primary" onclick="go('forest')">林间静思</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(state === 'forest'){
+    const q = getRandomQuote();
+    const isMatch = matchKeyword();
+    stage.innerHTML = `<div class="screen show">
+      <h1 style="font-size:22px">林间静思</h1>
+      <div class="quote-block">
+        <p class="quote-text">${q.text}</p>
+        <p class="quote-author">——${q.author}《${q.book||''}》</p>
+      </div>
+      ${isMatch ? '<p class="soft">你的心绪，与文字里的孤独与前行悄然共鸣。</p>' : '<p class="soft">在林间风声里，慢慢和自己对话。</p>'}
+      <div class="btns">
+        <button class="ghost" onclick="go('grave')">回到墓碑</button>
+        <button class="primary" onclick="go('farewell')">走向告别</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (state === 'farewell') {
+    stage.innerHTML = `<div class="screen show">
+      <h1>告别落幕</h1>
+      <p class="soft" style="max-width:22em;text-align:center;line-height:2">
+      把执念交给风与落叶<br>
+      把心事葬于静默林间<br>
+      此后步步向前，轻盈自渡
+      </p>
+      <div class="btns"><button class="ghost" onclick="restart()">重新开始</button></div>
+    </div>`;
+    return;
+  }
+}
+
+function go(s) { state = s; render(); }
+function saveName() {
+  const v = document.getElementById('objIn').value.trim();
+  if (!v) return; obj = v; go('epitaph');
+}
+function saveEpitaph() {
+  epitaph = document.getElementById('epIn').value.trim();
+  leafCount = 0; go('grave');
+}
+function dropLeaf() {
+  if (leafCount >= 5) return;
+  const leaves = document.querySelectorAll('#leafLayer .leaf');
+  const mossBed = document.getElementById('mossBed');
+  const hint = document.getElementById('graveHint');
+  leaves[leafCount].classList.add('fallen');
+  leafCount++;
+  if (leafCount >= 3) mossBed.classList.add('on');
+  hint.textContent = leafCount >=5 ? "落叶散尽，苔藓渐生，心事终得安放。" : "再落一叶，慢慢放下。";
+}
+function restart() {
+  obj = ''; epitaph = ''; leafCount = 0; state = 'entry'; render();
+}
+
+render();
+</script>
+</body>
+</html>
